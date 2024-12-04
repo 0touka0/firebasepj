@@ -1,5 +1,5 @@
 import { defineNuxtPlugin } from "#app";
-import { initializeApp } from "firebase/app";
+import { initializeApp, getApps } from "firebase/app";
 import { getAuth } from "firebase/auth";
 import { useRuntimeConfig } from "#app";
 
@@ -16,14 +16,25 @@ export default defineNuxtPlugin(() => {
         measurementId: config.public.firebaseMeasurementId,
     };
 
+    let app; // Firebase アプリを保持する変数
     try {
-        // Firebaseアプリの初期化
-        const app = initializeApp(firebaseConfig);
+        // Firebase アプリが初期化されていなければ初期化
+        if (!getApps().length) {
+            app = initializeApp(firebaseConfig);
+            console.log("Firebaseが正常に初期化されました！");
+        } else {
+            app = getApps()[0]; // 既存の初期化済みアプリを取得
+            console.log("既存のFirebaseアプリを使用します！");
+        }
 
-        // Firebase Authenticationの取得
+        // Firebase Authentication の取得
         const auth = getAuth(app);
 
-        console.log("Firebaseが正常に初期化されました！");
+        return {
+            provide: {
+                firebaseAuth: auth,
+            },
+        };
     } catch (error) {
         console.error("Firebaseの初期化中にエラーが発生しました: ", error);
     }
